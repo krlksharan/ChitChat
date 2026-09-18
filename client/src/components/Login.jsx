@@ -1,0 +1,104 @@
+import { useState } from 'react';
+
+export default function Login({ onLogin }) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!username || !password) {
+      setError('Please enter both username and password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      onLogin(data.user, data.token);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container glass-panel">
+      <div className="auth-header">
+        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+           <svg role="img" width="48" height="48" viewBox="0 0 24 24" style={{ color: 'white' }}>
+             <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.073zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.8956zm16.0993 3.8558L12.5973 8.3829l2.0343-1.1732a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.3879-.6765zM8.504 5.2223a4.4802 4.4802 0 0 1 2.8953 1.0503l-.1419.0804-4.783 2.7582a.7948.7948 0 0 0-.3927.6813V16.53a.071.071 0 0 1-.038-.052V10.895a4.504 4.504 0 0 1 2.4603-4.1221l-.0001-.5506zm8.8164 3.125a4.4708 4.4708 0 0 1 .5346 3.0137l-.142-.0852-4.783-2.7582a.7712.7712 0 0 0-.7806 0L6.29 11.8861V9.5537a.0804.0804 0 0 1 .0332-.0615l4.3423-2.505a4.4992 4.4992 0 0 1 6.1408 1.6464zM12 15.3323a3.3323 3.3323 0 1 1 0-6.6646 3.3323 3.3323 0 0 1 0 6.6646z" fill="currentColor"/>
+           </svg>
+        </div>
+        <h1 style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '0.5rem' }}>{isLogin ? 'Welcome back' : 'Create your account'}</h1>
+        <p style={{ color: 'var(--text-muted)' }}>{isLogin ? 'Enter your details to continue to ChatGPT' : 'Sign up to continue to ChatGPT'}</p>
+      </div>
+
+      {error && <div className="error-message">{error}</div>}
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="form-group">
+          <label htmlFor="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            className="form-control"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
+            autoComplete="username"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            className="form-control"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            autoComplete={isLogin ? 'current-password' : 'new-password'}
+          />
+        </div>
+
+        <button type="submit" className="btn" disabled={loading}>
+          {loading ? 'Please wait...' : 'Continue'}
+        </button>
+      </form>
+
+      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+        <button 
+          className="btn-secondary" 
+          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem' }}
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError('');
+          }}
+        >
+          {isLogin ? "Don't have an account? Register" : "Already have an account? Sign in"}
+        </button>
+      </div>
+    </div>
+  );
+}
